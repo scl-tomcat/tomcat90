@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 40
+%global micro_version 42
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       4%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -62,7 +62,7 @@ License:       ASL 2.0
 URL:           http://tomcat.apache.org/
 Source0:       http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
-Source2:       %{name}-%{major_version}.%{minor_version}.init
+#Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
 Source4:       %{name}-%{major_version}.%{minor_version}.wrapper
 Source5:       %{name}-%{major_version}.%{minor_version}.logrotate
@@ -83,13 +83,16 @@ Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
 
 
-Patch0:        %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
-Patch1:        %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
+Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
+Patch2: %{name}-%{version}-CVE-2013-4286.patch
+Patch3: %{name}-%{version}-CVE-2013-4322.patch
+Patch4: %{name}-%{version}-CVE-2014-0050.patch
 
 BuildArch:     noarch
 
 BuildRequires: ant
-BuildRequires: ant-nodeps
+#BuildRequires: ant-nodeps
 BuildRequires: ecj >= 1:4.2.1
 BuildRequires: findutils
 BuildRequires: apache-commons-collections
@@ -153,15 +156,15 @@ Requires: jpackage-utils
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
 
-%package systemv
-Group: System Environment/Daemons
-Summary: Systemv scripts for Apache Tomcat
-Requires: %{name} = %{epoch}:%{version}-%{release}
-Requires(post): chkconfig
-Requires(postun): chkconfig
+#%package systemv
+#Group: System Environment/Daemons
+#Summary: Systemv scripts for Apache Tomcat
+#Requires: %{name} = %{epoch}:%{version}-%{release}
+#Requires(post): chkconfig
+#Requires(postun): chkconfig
 
-%description systemv
-SystemV scripts to start and stop tomcat service
+#%description systemv
+#SystemV scripts to start and stop tomcat service
 
 %package jsvc
 Group: System Environment/Daemons
@@ -242,11 +245,16 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 
 %patch0 -p0
 %patch1 -p0
+%patch2 -p0
+%patch3 -p0
+%patch4 -p0
+
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
 
 %build
 export OPT_JAR_LIST="xalan-j2-serializer"
+
    # we don't care about the tarballs and we're going to replace
    # tomcat-dbcp.jar with apache-commons-{collections,dbcp,pool}-tomcat5.jar
    # so just create a dummy file for later removal
@@ -358,8 +366,8 @@ popd
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE3} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
-%{__install} -m 0644 %{SOURCE2} \
-    ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
+#%{__install} -m 0644 %{SOURCE2} \
+#    ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
 %{__install} -m 0644 %{SOURCE11} \
@@ -372,7 +380,7 @@ popd
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-jsvc.service
 %{__install} -m 0644 %{SOURCE18} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc-sysd
-%{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
+# %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
 %{__sed} -e "s|\@\@\@TCHOME\@\@\@|%{homedir}|g" \
@@ -503,15 +511,15 @@ EOF
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
-    -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
+    -s /sbin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
 
 %post
 # install but don't activate
 %systemd_post %{name}.service
 
-%post systemv
+#%post systemv
 # install but don't activate
-/sbin/chkconfig --add %{name}
+#/sbin/chkconfig --add %{name}
 
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
@@ -525,9 +533,11 @@ EOF
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20300
 
-%preun systemv
-    %{_initrddir}/%{name} stop >/dev/null 2>&1
-    /sbin/chkconfig --del %{name}
+#%preun systemv
+#if [ "$1" = "0" ]; then
+#    %{_initrddir}/%{name} stop >/dev/null 2>&1
+#    /sbin/chkconfig --del %{name}
+#fi
 
 %preun
 # clean tempdir and workdir on removal or upgrade
@@ -665,10 +675,10 @@ fi
 %{appdir}/examples
 %{appdir}/sample
 
-%files systemv
-%defattr(755,root,root,0755)
-%{_sbindir}/d%{name}
-%{_initrddir}/%{name}
+#%files systemv
+#%defattr(755,root,root,0755)
+#%{_sbindir}/d%{name}
+#%{_initrddir}/%{name}
 
 %files jsvc
 %defattr(755,root,root,0755)
@@ -676,7 +686,36 @@ fi
 %{_sbindir}/%{name}-jsvc-sysd
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
+
 %changelog
+* Thu Mar 20 2014 David Knox <dknox@redhat.com> - 0:7.0.42-4
+- Related: rhbz#1056696 correct packaging for sbin tomcat
+
+* Thu Mar 20 2014 David Knox <dknox@redhat.com> - 0:7.0.42-3
+- Related: CVE-2013-4286. increment build number. missed doing
+- it. 
+- Resolves: rhbz#1038183 remove BR for ant-nodeps. it's
+- no long used.
+
+* Wed Jan 22 2014 David Knox <dknox@redhat.com> - 0:7.0.42-2
+- Resolves: rhbz#1056673 Invocation of useradd with shell
+- other than sbin nologin
+- Resolves: rhbz#1056677 preun systemv scriptlet unconditionally
+- stops service
+- Resolves: rhbz#1056696 init.d tomcat does not conform to RHEL7
+- systemd rules. systemv subpackage is removed.
+- Resolves: CVE-2013-4286
+- Resolves: CVE-2013-4322
+- Resolves: CVE-2014-0050
+- Built for rhel-7 RC
+
+* Tue Jan 21 2014 David Knox <dknox@redhat.com> - 0:7.0.42-1
+- Resolves: rhbz#1051657 update to 7.0.42. Ant-nodeps is
+- deprecated.
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 07.0.40-3
+- Mass rebuild 2013-12-27
+
 * Sat May 11 2013 Ivan Afonichev <ivan.afonichev@gmail.com> 0:7.0.40-1
 - Updated to 7.0.40
 - Resolves: rhbz 956569 added missing commons-pool link
