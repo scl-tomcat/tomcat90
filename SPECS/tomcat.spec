@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       4%{?dist}
+Release:       5%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -688,6 +688,12 @@ fi
 
 
 %changelog
+* Wed Apr 16 2014 David Knox <dknox@redhat.com> - 0:7.0.42-5
+- Related: CVE-2013-4286
+- Related: CVE-2013-4322
+- Related: CVE-2014-0050
+- revisit patches for above. 
+
 * Thu Mar 20 2014 David Knox <dknox@redhat.com> - 0:7.0.42-4
 - Related: rhbz#1056696 correct packaging for sbin tomcat
 
