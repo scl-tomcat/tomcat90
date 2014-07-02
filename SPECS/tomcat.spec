@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       5%{?dist}
+Release:       6%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -88,6 +88,13 @@ Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 Patch2: %{name}-%{version}-CVE-2013-4286.patch
 Patch3: %{name}-%{version}-CVE-2013-4322.patch
 Patch4: %{name}-%{version}-CVE-2014-0050.patch
+Patch5: %{name}-%{version}-CVE-2014-0099.patch
+Patch6: %{name}-%{version}-CVE-2014-0096.patch
+Patch7: %{name}-%{version}-CVE-2014-0075.patch
+# postponed. apply with 4590
+# Deferred
+#Patch5: %{name}-%{version}-CVE-2013-4590.patch
+#Patch8: %{name}-%{version}-CVE-2014-0119.patch
 
 BuildArch:     noarch
 
@@ -248,6 +255,12 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch2 -p0
 %patch3 -p0
 %patch4 -p0
+%patch5 -p0
+%patch6 -p0
+%patch7 -p0
+# postponed. apply with 4590
+#%patch8 -p0
+
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -686,8 +699,15 @@ fi
 %{_sbindir}/%{name}-jsvc-sysd
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
-
 %changelog
+* Wed Jun 11 2014 David Knox <dknox@redhat.com> - 0:7.0.42-6
+- Resolves: CVE-2014-0099 Fix possible overflow when parsing
+- long values from byte array
+- Resolves: CVE-2014-0096 Information discloser process XSLT
+- files not subject to same constraint running under
+- java security manager
+- Resolves: CVE-2014-0075 Avoid overflow in ChunkedInputFilter.
+
 * Wed Apr 16 2014 David Knox <dknox@redhat.com> - 0:7.0.42-5
 - Related: CVE-2013-4286
 - Related: CVE-2013-4322
