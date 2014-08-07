@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6%{?dist}
+Release:       8%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -91,10 +91,8 @@ Patch4: %{name}-%{version}-CVE-2014-0050.patch
 Patch5: %{name}-%{version}-CVE-2014-0099.patch
 Patch6: %{name}-%{version}-CVE-2014-0096.patch
 Patch7: %{name}-%{version}-CVE-2014-0075.patch
-# postponed. apply with 4590
-# Deferred
-#Patch5: %{name}-%{version}-CVE-2013-4590.patch
-#Patch8: %{name}-%{version}-CVE-2014-0119.patch
+Patch8: %{name}-%{version}-CVE-2013-4590.patch
+Patch9: %{name}-%{version}-CVE-2014-0119.patch
 
 BuildArch:     noarch
 
@@ -258,8 +256,8 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch5 -p0
 %patch6 -p0
 %patch7 -p0
-# postponed. apply with 4590
-#%patch8 -p0
+%patch8 -p0
+%patch9 -p0
 
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
@@ -700,6 +698,14 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Jul 22 2014 David Knox <dknox@redhat.com> - 0:7.0.42-8
+- Resolves: CVE-2013-4590
+- Resolves: CVE-2014-0119
+
+* Tue Jul 8 2014 David Knox <dknox@redhat.com> - 0:7.0.42-7
+- Related: CVE-2014-0099 incrementing release so rpmdiff doesn't complain about
+- no new entries in the changelog
+
 * Wed Jun 11 2014 David Knox <dknox@redhat.com> - 0:7.0.42-6
 - Resolves: CVE-2014-0099 Fix possible overflow when parsing
 - long values from byte array
