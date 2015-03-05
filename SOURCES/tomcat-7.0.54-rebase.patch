@@ -1,0 +1,28 @@
+--- java/org/apache/jasper/compiler/JDTCompiler.java.orig	2014-09-17 12:18:00.909020000 -0400
++++ java/org/apache/jasper/compiler/JDTCompiler.java	2014-09-17 12:21:41.007769000 -0400
+@@ -333,9 +333,11 @@
+             } else if(opt.equals("1.7")) {
+                 settings.put(CompilerOptions.OPTION_Source,
+                              CompilerOptions.VERSION_1_7);
++            /**
+             } else if(opt.equals("1.8")) {
+                 settings.put(CompilerOptions.OPTION_Source,
+                              CompilerOptions.VERSION_1_8);
++            **/
+             } else {
+                 log.warn("Unknown source VM " + opt + " ignored.");
+                 settings.put(CompilerOptions.OPTION_Source,
+@@ -377,11 +379,13 @@
+                              CompilerOptions.VERSION_1_7);
+                 settings.put(CompilerOptions.OPTION_Compliance,
+                         CompilerOptions.VERSION_1_7);
++            /**
+             } else if(opt.equals("1.8")) {
+                 settings.put(CompilerOptions.OPTION_TargetPlatform,
+                              CompilerOptions.VERSION_1_8);
+                 settings.put(CompilerOptions.OPTION_Compliance,
+                         CompilerOptions.VERSION_1_8);
++            **/
+             } else {
+                 log.warn("Unknown target VM " + opt + " ignored.");
+                 settings.put(CompilerOptions.OPTION_TargetPlatform,

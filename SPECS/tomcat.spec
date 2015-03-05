@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 42
+%global micro_version 54
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       8%{?dist}
+Release:       1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -81,18 +81,24 @@ Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
 Source18:      %{name}-%{major_version}.%{minor_version}-tomcat-jsvc-sysd
 Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
+Source21:      tomcat-functions
+Source22:      tomcat-preamble
+Source23:      tomcat-server
+Source24:      tomcat-named.service
 
 
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-Patch2: %{name}-%{version}-CVE-2013-4286.patch
-Patch3: %{name}-%{version}-CVE-2013-4322.patch
-Patch4: %{name}-%{version}-CVE-2014-0050.patch
-Patch5: %{name}-%{version}-CVE-2014-0099.patch
-Patch6: %{name}-%{version}-CVE-2014-0096.patch
-Patch7: %{name}-%{version}-CVE-2014-0075.patch
-Patch8: %{name}-%{version}-CVE-2013-4590.patch
-Patch9: %{name}-%{version}-CVE-2014-0119.patch
+Patch2: tomcat-7.0.54-rebase.patch
+#Patch2: %{name}-%{version}-CVE-2013-4286.patch
+#Patch3: %{name}-%{version}-CVE-2013-4322.patch
+#Patch4: %{name}-%{version}-CVE-2014-0050.patch
+#Patch5: %{name}-%{version}-CVE-2014-0099.patch
+#Patch6: %{name}-%{version}-CVE-2014-0096.patch
+#Patch7: %{name}-%{version}-CVE-2014-0075.patch
+
+# Postponed
+#Patch5: %{name}-%{version}-CVE-2013-4590.patch
 
 BuildArch:     noarch
 
@@ -161,16 +167,6 @@ Requires: jpackage-utils
 %description javadoc
 Javadoc generated documentation for Apache Tomcat.
 
-#%package systemv
-#Group: System Environment/Daemons
-#Summary: Systemv scripts for Apache Tomcat
-#Requires: %{name} = %{epoch}:%{version}-%{release}
-#Requires(post): chkconfig
-#Requires(postun): chkconfig
-
-#%description systemv
-#SystemV scripts to start and stop tomcat service
-
 %package jsvc
 Group: System Environment/Daemons
 Summary: Apache jsvc wrapper for Apache Tomcat as separate service
@@ -193,7 +189,6 @@ Requires(postun): chkconfig
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API implementation classes.
-
 
 %package lib
 Group: Development/Libraries
@@ -224,14 +219,14 @@ Apache Tomcat Servlet API implementation classes.
 
 %package el-%{elspec}-api
 Group: Development/Libraries
-Summary: Expression Language v1.0 API
+Summary: Expression Language v%{elspec} API
 Provides: el_1_0_api = %{epoch}:%{version}-%{release}
 Provides: el_api = %{elspec}
 Requires(post): chkconfig
 Requires(postun): chkconfig
 
 %description el-%{elspec}-api
-Expression Language 1.0.
+Expression Language %{elspec}.
 
 %package webapps
 Group: Applications/Internet
@@ -251,14 +246,11 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch0 -p0
 %patch1 -p0
 %patch2 -p0
-%patch3 -p0
-%patch4 -p0
-%patch5 -p0
-%patch6 -p0
-%patch7 -p0
-%patch8 -p0
-%patch9 -p0
-
+#%patch3 -p0
+#%patch4 -p0
+#%patch5 -p0
+#%patch6 -p0
+#%patch7 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -292,6 +284,7 @@ export OPT_JAR_LIST="xalan-j2-serializer"
       -Dno.build.dbcp=true \
       -Dversion="%{version}" \
       -Dversion.build="%{micro_version}" \
+      -Djava.7.home=%{java_home} \
       deploy dist-prepare dist-source javadoc
 
     # remove some jars that we'll replace with symlinks later
@@ -350,12 +343,14 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{_localstatedir}/run
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{_localstatedir}/lib/tomcats
 /bin/touch ${RPM_BUILD_ROOT}%{_localstatedir}/run/%{name}.pid
 /bin/echo "%{name}-%{major_version}.%{minor_version}.%{micro_version} RPM installed" >> ${RPM_BUILD_ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{workdir}
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_unitdir}
+%{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}
 
 # move things into place
 # First copy supporting libs to tomcat lib
@@ -377,20 +372,12 @@ popd
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE3} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
-#%{__install} -m 0644 %{SOURCE2} \
-#    ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
 %{__install} -m 0644 %{SOURCE4} \
     ${RPM_BUILD_ROOT}%{_sbindir}/%{name}
 %{__install} -m 0644 %{SOURCE11} \
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}.service
-%{__install} -m 0644 %{SOURCE17} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-sysd
-%{__install} -m 0644 %{SOURCE19} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc
 %{__install} -m 0644 %{SOURCE20} \
     ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-jsvc.service
-%{__install} -m 0644 %{SOURCE18} \
-    ${RPM_BUILD_ROOT}%{_sbindir}/%{name}-jsvc-sysd
 # %{__ln_s} %{name} ${RPM_BUILD_ROOT}%{_sbindir}/d%{name}
 %{__sed} -e "s|\@\@\@TCLOG\@\@\@|%{logdir}|g" %{SOURCE5} \
     > ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d/%{name}
@@ -402,6 +389,16 @@ popd
    -e "s|\@\@\@TCTEMP\@\@\@|%{tempdir}|g" \
    -e "s|\@\@\@LIBDIR\@\@\@|%{_libdir}|g" %{SOURCE7} \
     > ${RPM_BUILD_ROOT}%{_bindir}/%{name}-tool-wrapper
+
+%{__install} -m 0644 %{SOURCE21} \
+    ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/functions         
+%{__install} -m 0755 %{SOURCE22} \
+    ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/preamble          
+%{__install} -m 0755 %{SOURCE23} \
+    ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/server            
+%{__install} -m 0644 %{SOURCE24} \
+    ${RPM_BUILD_ROOT}%{_unitdir}/%{name}@.service 
+
 # create jsp and servlet API symlinks
 pushd ${RPM_BUILD_ROOT}%{_javadir}
    %{__mv} %{name}/jsp-api.jar %{name}-jsp-%{jspspec}-api.jar
@@ -522,15 +519,11 @@ EOF
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
-    -s /sbin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
+    -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
 
 %post
 # install but don't activate
 %systemd_post %{name}.service
-
-#%post systemv
-# install but don't activate
-#/sbin/chkconfig --add %{name}
 
 %post jsp-%{jspspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/jsp.jar jsp \
@@ -543,12 +536,6 @@ EOF
 %post el-%{elspec}-api
 %{_sbindir}/update-alternatives --install %{_javadir}/elspec.jar elspec \
    %{_javadir}/%{name}-el-%{elspec}-api.jar 20300
-
-#%preun systemv
-#if [ "$1" = "0" ]; then
-#    %{_initrddir}/%{name} stop >/dev/null 2>&1
-#    /sbin/chkconfig --del %{name}
-#fi
 
 %preun
 # clean tempdir and workdir on removal or upgrade
@@ -589,7 +576,12 @@ fi
 %attr(0755,root,root) %{_bindir}/%{name}-tool-wrapper
 %attr(0755,root,root) %{_sbindir}/%{name}
 %attr(0644,root,root) %{_unitdir}/%{name}.service
-%attr(0755,root,root) %{_sbindir}/%{name}-sysd
+%attr(0644,root,root) %{_unitdir}/%{name}@.service
+%attr(0755,root,root) %dir %{_libexecdir}/%{name}
+%attr(0755,root,root) %dir %{_localstatedir}/lib/tomcats
+%attr(0644,root,root) %{_libexecdir}/%{name}/functions
+%attr(0755,root,root) %{_libexecdir}/%{name}/preamble
+%attr(0755,root,root) %{_libexecdir}/%{name}/server
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
@@ -686,33 +678,19 @@ fi
 %{appdir}/examples
 %{appdir}/sample
 
-#%files systemv
-#%defattr(755,root,root,0755)
-#%{_sbindir}/d%{name}
-#%{_initrddir}/%{name}
-
 %files jsvc
 %defattr(755,root,root,0755)
-%{_sbindir}/%{name}-jsvc
-%{_sbindir}/%{name}-jsvc-sysd
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
-* Tue Jul 22 2014 David Knox <dknox@redhat.com> - 0:7.0.42-8
-- Resolves: CVE-2013-4590
-- Resolves: CVE-2014-0119
+* Wed Sep 17 2014 David Knox <dknox@redhat.com> - 0:7.0.54-1
+- Resolves: rhbz#1141372 - Remove systemv artifacts. Add new systemd 
+- artifacts. Rebase on 7.0.54.
 
-* Tue Jul 8 2014 David Knox <dknox@redhat.com> - 0:7.0.42-7
-- Related: CVE-2014-0099 incrementing release so rpmdiff doesn't complain about
-- no new entries in the changelog
-
-* Wed Jun 11 2014 David Knox <dknox@redhat.com> - 0:7.0.42-6
-- Resolves: CVE-2014-0099 Fix possible overflow when parsing
-- long values from byte array
-- Resolves: CVE-2014-0096 Information discloser process XSLT
-- files not subject to same constraint running under
-- java security manager
-- Resolves: CVE-2014-0075 Avoid overflow in ChunkedInputFilter.
+* Wed Jun 18 2014 David Knox <dknox@redhat.com> - 0:7.0.43-6
+- Resolves: CVE-2014-0099
+- Resolves: CVE-2014-0096
+- Resolves: CVE-2014-0075
 
 * Wed Apr 16 2014 David Knox <dknox@redhat.com> - 0:7.0.42-5
 - Related: CVE-2013-4286
