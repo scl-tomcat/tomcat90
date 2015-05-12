@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -90,6 +90,7 @@ Source24:      tomcat-named.service
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 Patch2: tomcat-7.0.54-rebase.patch
+Patch3: %{name}-7.0.54-CVE-2014-0227.patch
 #Patch2: %{name}-%{version}-CVE-2013-4286.patch
 #Patch3: %{name}-%{version}-CVE-2013-4322.patch
 #Patch4: %{name}-%{version}-CVE-2014-0050.patch
@@ -246,11 +247,7 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch0 -p0
 %patch1 -p0
 %patch2 -p0
-#%patch3 -p0
-#%patch4 -p0
-#%patch5 -p0
-#%patch6 -p0
-#%patch7 -p0
+%patch3 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -683,6 +680,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Mar 24 2015 David Knox <dknox@redhat.com> - 0:7.0.54-2
+- Resovles: CVE-2014-0227
+
 * Wed Sep 17 2014 David Knox <dknox@redhat.com> - 0:7.0.54-1
 - Resolves: rhbz#1141372 - Remove systemv artifacts. Add new systemd 
 - artifacts. Rebase on 7.0.54.
