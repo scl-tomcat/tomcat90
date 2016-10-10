@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}
+Release:       8%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -62,7 +62,6 @@ License:       ASL 2.0
 URL:           http://tomcat.apache.org/
 Source0:       http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{version}/src/%{packdname}.tar.gz
 Source1:       %{name}-%{major_version}.%{minor_version}.conf
-#Source2:       %{name}-%{major_version}.%{minor_version}.init
 Source3:       %{name}-%{major_version}.%{minor_version}.sysconfig
 Source4:       %{name}-%{major_version}.%{minor_version}.wrapper
 Source5:       %{name}-%{major_version}.%{minor_version}.logrotate
@@ -77,9 +76,6 @@ Source13:      jasper-el-OSGi-MANIFEST.MF
 Source14:      jasper-OSGi-MANIFEST.MF
 Source15:      tomcat-api-OSGi-MANIFEST.MF
 Source16:      tomcat-juli-OSGi-MANIFEST.MF
-Source17:      %{name}-%{major_version}.%{minor_version}-tomcat-sysd
-Source18:      %{name}-%{major_version}.%{minor_version}-tomcat-jsvc-sysd
-Source19:      %{name}-%{major_version}.%{minor_version}-jsvc.wrapper
 Source20:      %{name}-%{major_version}.%{minor_version}-jsvc.service
 Source21:      tomcat-functions
 Source22:      tomcat-preamble
@@ -91,15 +87,9 @@ Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
 Patch2: tomcat-7.0.54-rebase.patch
 Patch3: %{name}-7.0.54-CVE-2014-0227.patch
-#Patch2: %{name}-%{version}-CVE-2013-4286.patch
-#Patch3: %{name}-%{version}-CVE-2013-4322.patch
-#Patch4: %{name}-%{version}-CVE-2014-0050.patch
-#Patch5: %{name}-%{version}-CVE-2014-0099.patch
-#Patch6: %{name}-%{version}-CVE-2014-0096.patch
-#Patch7: %{name}-%{version}-CVE-2014-0075.patch
-
-# Postponed
-#Patch5: %{name}-%{version}-CVE-2013-4590.patch
+Patch4: %{name}-7.0.54-CVE-2014-7810.patch
+Patch5: %{name}-7.0.54-CVE-2015-5346.patch
+Patch6: %{name}-7.0.54-CVE-2016-5388.patch
 
 BuildArch:     noarch
 
@@ -248,6 +238,9 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch1 -p0
 %patch2 -p0
 %patch3 -p0
+%patch4 -p0
+%patch5 -p0
+%patch6 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -339,9 +332,7 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
-%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{_localstatedir}/run
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{_localstatedir}/lib/tomcats
-/bin/touch ${RPM_BUILD_ROOT}%{_localstatedir}/run/%{name}.pid
 /bin/echo "%{name}-%{major_version}.%{minor_version}.%{micro_version} RPM installed" >> ${RPM_BUILD_ROOT}%{logdir}/catalina.out
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{homedir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{tempdir}
@@ -506,11 +497,6 @@ done
 # replace temporary copy with link
 %{__ln_s} -f %{bindir}/tomcat-juli.jar ${RPM_BUILD_ROOT}%{libdir}/
 
-mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
-cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/%{name}.conf <<EOF
-f %{_localstatedir}/run/%{name}.pid 0644 tomcat tomcat -
-EOF
-
 
 %pre
 # add the tomcat user and group
@@ -580,30 +566,31 @@ fi
 %attr(0755,root,root) %{_libexecdir}/%{name}/preamble
 %attr(0755,root,root) %{_libexecdir}/%{name}/server
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %{_sysconfdir}/sysconfig/%{name}
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,root,tomcat) %dir %{basedir}
 %attr(0755,root,tomcat) %dir %{confdir}
+
 %defattr(0664,tomcat,root,0770)
 %attr(0770,tomcat,root) %dir %{logdir}
+
 %defattr(0664,root,tomcat,0770)
 %attr(0660,tomcat,tomcat) %{logdir}/catalina.out
-%attr(0644,tomcat,tomcat) %{_localstatedir}/run/%{name}.pid
 %attr(0770,root,tomcat) %dir %{cachedir}
 %attr(0770,root,tomcat) %dir %{tempdir}
 %attr(0770,root,tomcat) %dir %{workdir}
-%defattr(0664,root,tomcat,0775)
+
+%defattr(0644,root,tomcat,0775)
 %attr(0775,root,tomcat) %dir %{appdir}
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/%{name}.conf
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/*.policy
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/*.properties
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/context.xml
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/server.xml
-%attr(0660,tomcat,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
-%attr(0664,tomcat,tomcat) %config(noreplace) %{confdir}/web.xml
+%config(noreplace) %{confdir}/%{name}.conf
+%config(noreplace) %{confdir}/*.policy
+%config(noreplace) %{confdir}/*.properties
+%config(noreplace) %{confdir}/context.xml
+%config(noreplace) %{confdir}/server.xml
+%attr(0640,root,tomcat) %config(noreplace) %{confdir}/tomcat-users.xml
+%config(noreplace) %{confdir}/web.xml
 %dir %{homedir}
-%{_prefix}/lib/tmpfiles.d/%{name}.conf
 %{bindir}/bootstrap.jar
 %{bindir}/catalina-tasks.xml
 %{homedir}/lib
@@ -680,8 +667,24 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Thu Aug 25 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-8
+- Resolves: rhbz#1368121
+
+* Tue Aug 23 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-7
+- Resolves: rhbz#1362212 Tomcat: CGI sets environmental variable based on user supplied Proxy request header
+- Resolves: rhbz#1368121
+
+* Wed Aug 03 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-5
+- Resolves: rhbz#1362567
+
+* Wed Jul 06 2016 Coty Sutherland <csutherl@redhat.com> 0:7.0.54-4
+- Resolves: CVE-2015-5346
+
+* Thu Jun 02 2016 Coty Sutherland <csutherl@redhat.com> 0:7.0.54-3
+- Resolves: CVE-2014-7810
+
 * Tue Mar 24 2015 David Knox <dknox@redhat.com> - 0:7.0.54-2
-- Resovles: CVE-2014-0227
+- Resolves: CVE-2014-0227
 
 * Wed Sep 17 2014 David Knox <dknox@redhat.com> - 0:7.0.54-1
 - Resolves: rhbz#1141372 - Remove systemv artifacts. Add new systemd 

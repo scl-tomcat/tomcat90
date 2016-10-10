@@ -44,9 +44,6 @@
 # Whether to annoy the user with "attempting to shut down" messages or not
 #SHUTDOWN_VERBOSE="false"
 
-# Set the TOMCAT_PID location
-#CATALINA_PID="/var/run/tomcat.pid"
-
 # Connector port is 8080 for this tomcat instance
 #CONNECTOR_PORT="8080"
 
