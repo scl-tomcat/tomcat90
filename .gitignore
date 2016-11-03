@@ -1,1 +1,3 @@
-SOURCES/apache-tomcat-7.0.54-src.tar.gz
+SOURCES/apache-tomcat-7.0.69-src.tar.gz
+SOURCES/tomcat-juli-adapters.jar
+SOURCES/tomcat-juli.jar

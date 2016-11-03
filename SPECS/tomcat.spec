@@ -31,7 +31,7 @@
 %global jspspec 2.2
 %global major_version 7
 %global minor_version 0
-%global micro_version 54
+%global micro_version 69
 %global packdname apache-tomcat-%{version}-src
 %global servletspec 3.0
 %global elspec 2.2
@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       8%{?dist}
+Release:       10%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -81,15 +81,15 @@ Source21:      tomcat-functions
 Source22:      tomcat-preamble
 Source23:      tomcat-server
 Source24:      tomcat-named.service
-
+Source25:      tomcat-juli-adapters.jar
+Source26:      tomcat-juli.jar
 
 Patch0: %{name}-%{major_version}.%{minor_version}-bootstrap-MANIFEST.MF.patch
 Patch1: %{name}-%{major_version}.%{minor_version}-tomcat-users-webapp.patch
-Patch2: tomcat-7.0.54-rebase.patch
-Patch3: %{name}-7.0.54-CVE-2014-0227.patch
-Patch4: %{name}-7.0.54-CVE-2014-7810.patch
-Patch5: %{name}-7.0.54-CVE-2015-5346.patch
-Patch6: %{name}-7.0.54-CVE-2016-5388.patch
+Patch2: %{name}-7.0.54-rebase.patch
+Patch3: %{name}-7.0-catalina-policy.patch
+Patch4: %{name}-7.0.69-CVE-2016-3092.patch
+Patch5: %{name}-7.0.69-CVE-2016-5388.patch
 
 BuildArch:     noarch
 
@@ -240,7 +240,6 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch3 -p0
 %patch4 -p0
 %patch5 -p0
-%patch6 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -329,6 +328,8 @@ zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{bindir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}/Catalina/localhost
+%{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{confdir}/conf.d
+/bin/echo "Place your custom *.conf files here. Shell expansion is supported." > ${RPM_BUILD_ROOT}%{confdir}/conf.d/README
 %{__install} -d -m 0755 ${RPM_BUILD_ROOT}%{libdir}
 %{__install} -d -m 0775 ${RPM_BUILD_ROOT}%{logdir}
 /bin/touch ${RPM_BUILD_ROOT}%{logdir}/catalina.out
@@ -419,6 +420,13 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
 
     # Temporary copy the juli jar here from /usr/share/java/tomcat (for maven depmap)
     %{__cp} -a ${RPM_BUILD_ROOT}%{bindir}/tomcat-juli.jar ./
+
+    # Add extras JULI jars
+    %{__mkdir} extras
+    pushd extras
+        %{__cp} -p %{SOURCE25} .
+        %{__cp} -p %{SOURCE26} .
+    popd
 popd
 
 # symlink to the FHS locations where we've installed things
@@ -502,7 +510,7 @@ done
 # add the tomcat user and group
 %{_sbindir}/groupadd -g %{tcuid} -r tomcat 2>/dev/null || :
 %{_sbindir}/useradd -c "Apache Tomcat" -u %{tcuid} -g tomcat \
-    -s /bin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
+    -s /sbin/nologin -r -d %{homedir} tomcat 2>/dev/null || :
 
 %post
 # install but don't activate
@@ -574,7 +582,7 @@ fi
 %attr(0770,tomcat,root) %dir %{logdir}
 
 %defattr(0664,root,tomcat,0770)
-%attr(0660,tomcat,tomcat) %{logdir}/catalina.out
+%attr(0660,tomcat,tomcat) %verify(not size md5 mtime) %{logdir}/catalina.out
 %attr(0770,root,tomcat) %dir %{cachedir}
 %attr(0770,root,tomcat) %dir %{tempdir}
 %attr(0770,root,tomcat) %dir %{workdir}
@@ -583,6 +591,8 @@ fi
 %attr(0775,root,tomcat) %dir %{appdir}
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina
 %attr(0775,root,tomcat) %dir %{confdir}/Catalina/localhost
+%attr(0755,root,tomcat) %dir %{confdir}/conf.d
+%{confdir}/conf.d/README
 %config(noreplace) %{confdir}/%{name}.conf
 %config(noreplace) %{confdir}/*.policy
 %config(noreplace) %{confdir}/*.properties
@@ -604,6 +614,8 @@ fi
 %defattr(0664,root,tomcat,0755)
 %{appdir}/host-manager
 %{appdir}/manager
+%config(noreplace) %{appdir}/manager/WEB-INF/web.xml
+%config(noreplace) %{appdir}/host-manager/WEB-INF/web.xml
 
 %files docs-webapp
 %defattr(-,root,root,-)
@@ -667,21 +679,50 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
-* Thu Aug 25 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-8
-- Resolves: rhbz#1368121
+* Thu Aug 25 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-10
+- Related: rhbz#1368122
 
-* Tue Aug 23 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-7
-- Resolves: rhbz#1362212 Tomcat: CGI sets environmental variable based on user supplied Proxy request header
-- Resolves: rhbz#1368121
+* Tue Aug 23 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-9
+- Resolves: rhbz#1362213 Tomcat: CGI sets environmental variable based on user supplied Proxy request header
+- Resolves: rhbz#1368122
 
-* Wed Aug 03 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.54-5
-- Resolves: rhbz#1362567
+* Wed Aug 03 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-7
+- Resolves: rhbz#1362545
 
-* Wed Jul 06 2016 Coty Sutherland <csutherl@redhat.com> 0:7.0.54-4
-- Resolves: CVE-2015-5346
+* Fri Jul 08 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-6
+- Related: rhbz#1201409 Added /etc/sysconfig/tomcat to the systemd unit for tomcat-jsvc.service
 
-* Thu Jun 02 2016 Coty Sutherland <csutherl@redhat.com> 0:7.0.54-3
-- Resolves: CVE-2014-7810
+* Fri Jul 01 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-5
+- Resolves: rhbz#1347860 The systemd service unit does not allow tomcat to shut down gracefully
+
+* Mon Jun 27 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-4
+- Resolves: rhbz#1350438 CVE-2016-3092 tomcat: Usage of vulnerable FileUpload package can result in denial of service
+
+* Fri Jun 17 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-3
+- Resolves: rhbz#1347774 The security manager doesn't work correctly (JSPs cannot be compiled)
+
+* Tue Jun 07 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-2
+- Rebase Resolves: rhbz#1311622 Getting NoSuchElementException while handling attributes with empty string value in tomcat
+- Rebase Resolves: rhbz#1320853 Add HSTS support
+- Rebase Resolves: rhbz#1293292 CVE-2014-7810 tomcat: Tomcat/JBossWeb: security manager bypass via EL expressions
+- Rebase Resolves: rhbz#1347144 CVE-2016-0706 tomcat: security manager bypass via StatusManagerServlet
+- Rebase Resolves: rhbz#1347139 CVE-2015-5346 tomcat: Session fixation
+- Rebase Resolves: rhbz#1347136 CVE-2015-5345 tomcat: directory disclosure
+- Rebase Resolves: rhbz#1347129 CVE-2015-5174 tomcat: URL Normalization issue
+- Rebase Resolves: rhbz#1347146 CVE-2016-0763 tomcat: security manager bypass via setGlobalContext()
+- Rebase Resolves: rhbz#1347142 CVE-2016-0714 tomcat: Security Manager bypass via persistence mechanisms
+- Rebase Resolves: rhbz#1347133 CVE-2015-5351 tomcat: CSRF token leak
+
+* Mon Jun 06 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-1
+- Resolves: rhbz#1287928 Rebase to tomcat 7.0.69
+- Resolves: rhbz#1327326 rpm -V tomcat fails on /var/log/tomcat/catalina.out
+- Resolves: rhbz#1277197 tomcat user has non-existing default shell set
+- Resolves: rhbz#1240279 The command tomcat-digest doesn't work with RHEL 7
+- Resolves: rhbz#1229476 Tomcat startup ONLY options
+- Resolves: rhbz#1133070 Need to include full implementation of tomcat-juli.jar and tomcat-juli-adapters.jar
+- Resolves: rhbz#1201409 Fix the broken tomcat-jsvc service unit
+- Resolves: rhbz#1221896 tomcat.service loads /etc/sysconfig/tomcat without shell expansion
+- Resolves: rhbz#1208402 Mark web.xml in tomcat-admin-webapps as config file
 
 * Tue Mar 24 2015 David Knox <dknox@redhat.com> - 0:7.0.54-2
 - Resolves: CVE-2014-0227
