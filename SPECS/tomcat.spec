@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       10%{?dist}
+Release:       11%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -90,6 +90,8 @@ Patch2: %{name}-7.0.54-rebase.patch
 Patch3: %{name}-7.0-catalina-policy.patch
 Patch4: %{name}-7.0.69-CVE-2016-3092.patch
 Patch5: %{name}-7.0.69-CVE-2016-5388.patch
+Patch6: %{name}-7.0.69-CVE-2016-8745.patch
+Patch7: %{name}-7.0.69-CVE-2016-6816.patch
 
 BuildArch:     noarch
 
@@ -240,6 +242,8 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch3 -p0
 %patch4 -p0
 %patch5 -p0
+%patch6 -p0
+%patch7 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -679,6 +683,10 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Mar 28 2017 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-11
+- Resolves: rhbz#1413591 CVE-2016-8745 tomcat: information disclosure due to incorrect Processor sharing
+- Resolves: rhbz#1402662 CVE-2016-6816 tomcat: HTTP Request smuggling vulnerability due to permitting invalid character in HTTP requests
+
 * Thu Aug 25 2016 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-10
 - Related: rhbz#1368122
 
