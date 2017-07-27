@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       11%{?dist}
+Release:       12%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -92,6 +92,9 @@ Patch4: %{name}-7.0.69-CVE-2016-3092.patch
 Patch5: %{name}-7.0.69-CVE-2016-5388.patch
 Patch6: %{name}-7.0.69-CVE-2016-8745.patch
 Patch7: %{name}-7.0.69-CVE-2016-6816.patch
+Patch8: %{name}-7.0.69-CVE-2017-5648.patch
+Patch9: %{name}-7.0.69-CVE-2017-5647.patch
+Patch10: %{name}-7.0.69-CVE-2017-5664.patch
 
 BuildArch:     noarch
 
@@ -244,6 +247,9 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch5 -p0
 %patch6 -p0
 %patch7 -p0
+%patch8 -p0
+%patch9 -p0
+%patch10 -p0
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -683,6 +689,11 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Fri Jun 09 2017 Coty Sutherland <csutherl@redhat.com> 0:7.0.69-12
+- Resolves: rhbz#1441487 CVE-2017-5648 tomcat: Calls to application listeners did not use the appropriate facade object
+- Resolves: rhbz#1441480 CVE-2017-5647 tomcat: Incorrect handling of pipelined requests when send file was used
+- Resolves: rhbz#1459746 CVE-2017-5664 tomcat: Security constrained bypass in error page mechanism
+
 * Tue Mar 28 2017 Coty Sutherland <csutherl@redhat.com> - 0:7.0.69-11
 - Resolves: rhbz#1413591 CVE-2016-8745 tomcat: information disclosure due to incorrect Processor sharing
 - Resolves: rhbz#1402662 CVE-2016-6816 tomcat: HTTP Request smuggling vulnerability due to permitting invalid character in HTTP requests
