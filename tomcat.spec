@@ -649,6 +649,9 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{?scl_prefix}%{pkg_name}-jsvc.service
 
 %changelog
+* Mon Oct 09 2017 Romain Philibert <Filirom1@gmail.com> 7.0.82-1
+- new package built with tito
+
 * Thu Jun 08 2017 Coty Sutherland <csutherl@redhat.com> 0:7.0.76-2
 - Resolves: rhbz#1459747 CVE-2017-5664 tomcat: Security constrained bypass in error page mechanism
 - Resolves: rhbz#1441481 CVE-2017-5647 tomcat: Incorrect handling of pipelined requests when send file was used
