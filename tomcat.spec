@@ -86,7 +86,6 @@ BuildRequires: ant
 #BuildRequires: ant-nodeps
 BuildRequires: ecj >= 1:4.2.1
 BuildRequires: findutils
-BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-dbcp
 BuildRequires: apache-commons-pool
@@ -101,7 +100,6 @@ BuildRequires: systemd-units
 BuildRequires: scl-utils-build
 Requires:      apache-commons-daemon
 Requires:      apache-commons-logging
-Requires:      apache-commons-collections
 Requires:      apache-commons-dbcp
 Requires:      apache-commons-pool
 Requires:      java >= 1:1.6.0
@@ -179,7 +177,6 @@ Requires: %{?scl_prefix}%{pkg_name}-jsp-%{jspspec}-api = %{epoch}:%{version}-%{r
 Requires: %{?scl_prefix}%{pkg_name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{?scl_prefix}%{pkg_name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj >= 1:4.2.1
-Requires: apache-commons-collections
 Requires: apache-commons-dbcp
 Requires: apache-commons-pool
 Requires(preun): coreutils
@@ -250,7 +247,6 @@ export OPT_JAR_LIST="xalan-j2-serializer"
    # who needs a build.properties file anyway
    %{ant} -Dbase.path="." \
       -Dbuild.compiler="modern" \
-      -Dcommons-collections.jar="$(build-classpath apache-commons-collections)" \
       -Dcommons-daemon.jar="$(build-classpath apache-commons-daemon)" \
       -Dcommons-daemon.native.src.tgz="HACK" \
       -Djasper-jdt.jar="$(build-classpath ecj)" \
@@ -370,8 +366,7 @@ pushd ${RPM_BUILD_ROOT}%{_javadir}
 popd
 
 pushd output/build
-    /usr/bin/build-jar-repository lib apache-commons-collections \
-                                        apache-commons-dbcp apache-commons-pool ecj 2>&1
+    /usr/bin/build-jar-repository lib apache-commons-dbcp apache-commons-pool ecj 2>&1
     # need to use -p here with b-j-r otherwise the examples webapp fails to
     # load with a java.io.IOException
     /usr/bin/build-jar-repository -p webapps/examples/WEB-INF/lib \
@@ -383,7 +378,6 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__ln_s} ../%{pkg_name}-jsp-%{jspspec}-api.jar .
     %{__ln_s} ../%{pkg_name}-servlet-%{servletspec}-api.jar .
     %{__ln_s} ../%{pkg_name}-el-%{elspec}-api.jar .
-    %{__ln_s} $(build-classpath apache-commons-collections) commons-collections.jar
     %{__ln_s} $(build-classpath apache-commons-dbcp) commons-dbcp.jar
     %{__ln_s} $(build-classpath apache-commons-pool) commons-pool.jar
     %{__ln_s} $(build-classpath log4j) log4j.jar
