@@ -1,0 +1,9 @@
+sudo: required
+
+services:
+  - docker
+
+script:
+  - if [ $TRAVIS_EVENT_TYPE == "pull_request" ]; then .test/test.sh; fi
+  - if [ $TRAVIS_EVENT_TYPE == "cron" ]; then .release/create-pr-on-new-version.sh; fi
+  - if [ $TRAVIS_EVENT_TYPE == "push" ] && [ $TRAVIS_BRANCH == "master" ]; then .release/tag-if-new-version.sh; fi

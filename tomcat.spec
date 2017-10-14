@@ -82,6 +82,7 @@ Source26:      http://www.apache.org/dist/tomcat/tomcat-%{major_version}/v%{vers
 
 BuildArch:     noarch
 
+
 BuildRequires: ant
 #BuildRequires: ant-nodeps
 BuildRequires: ecj >= 1:4.2.1
